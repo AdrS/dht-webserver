@@ -1,15 +1,23 @@
 from util import *
+import string
+
 def test_validPath():
 	assert(not validPath('asf\x01'))
 	assert(not validPath('a'*300))
 	assert(not validPath('~/yo'))
 	assert(not validPath('/yoasf jskalfjsdk '))
 	assert(not validPath('yoasf //jskalfjsdk '))
-	assert(not validPath('yoasf jskalfjsdk/'))
-	assert(not validPath('yoasf jskalfj\tsdk'))
+	assert(not validPath('yoasf jskalfjsdk*'))
+	assert(not validPath('yoasf jskalfj\nsdk'))
 	assert(validPath('asf'))
 	assert(validPath('asf.txt'))
 	assert(validPath('asdf sad f 6579878()- + /asf.txt'))
+
+	for c in string.digits:
+		assert(validPath(c))
+	for c in string.ascii_letters:
+		assert(validPath(c))
+
 
 def test_validHash():
 	assert(validHash('a'*64))

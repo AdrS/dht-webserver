@@ -1,7 +1,7 @@
 def validPath(path):
 	#TODO: test me!!! (doen't matter because I will be hashing filenames)
-	validPathChars = set('0123456789abcdefghipqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&\'()+,-./;=@[]^_`{}~ \t')
-	if not path or path.startswith('/') or path.startswith('~/') or '..' in path or '//' in path or not set(path).issubset(validPathChars) or len(path) > 255:
+	validPathChars = set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&\'()+,-./;=@[]^_`{}~ \t')
+	if (not path) or path.startswith('/') or path.startswith('~/') or '..' in path or '//' in path or (not set(path).issubset(validPathChars)) or len(path) > 255:
 		return False
 	return True
 
