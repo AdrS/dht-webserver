@@ -95,7 +95,7 @@ class FileStore:
 		return self.getServerIndex(fid) == self.sid
 
 	def getHost(self, fid):
-		return self.servers[self.getServerIndex(fid)][0]
+		return self.servers[self.getServerIndex(fid)][1]
 
 	def idToLocalPath(self, fid):
 		return self.base + os.sep + fid[:2] + os.sep + fid[2:4] + os.sep + fid[4:]

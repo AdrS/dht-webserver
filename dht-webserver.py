@@ -4,26 +4,42 @@ from twisted.internet import reactor
 from hashlib import sha256
 from urllib import unquote
 from util import *
-import sys, os
+import sys, os, FileStore, shutil
 
 class GetFile(Resource):
 	isLeaf = True
 	def __init__(self, path):
 		Resource.__init__(self)
 		self.path = path
-
+	
+	def notFound(self, request):
+		request.setHeader(b"content-type", b"text/plain")
+		request.setResponseCode(404)
+		return "404 file not found"
+	
 	def render_GET(self, request):
 		print request.path
-		#TODO: see if we have file locally
-		#if on another server, redirect
 		if not validPath(self.path):
-			request.setResponseCode(404)
-			return "404 file not found"
+			return self.notFound(request)
 
-		self.id = sha256(self.path).hexdigest()
+		fid = sha256(self.path).hexdigest()
 
-		request.setHeader(b"content-type", b"text/plain")
-		return "get file:" + self.id + "\nTODO: finish me!!!"
+		#if on another server, redirect
+		if not fileStore.isLocal(fid):
+			request.setResponseCode(301)
+			dest = 'http://' + fileStore.getHost(fid) + request.path
+			print dest
+			request.setHeader("location", dest)
+			return 'Look for file at: %s' % dest
+		#if file exists locally, send it
+		elif fileStore.existsInIndex(fid) and fileStore.existsOnDisk(fid):
+			#TODO: add support for range requests
+			with open(fileStore.idToLocalPath(fid), 'rb') as f:
+				shutil.copyfileobj(f, request)
+			request.finish()
+			return NOT_DONE_YET
+		else:
+			return self.notFound(request)
 
 class DownloadFile(Resource):
 	def getChild(self, name, request):
@@ -53,7 +69,6 @@ class UploadFile(Resource):
 		</html>
 		'''
 		
-
 if __name__ == '__main__':
 	port = 8080
 	base = os.getcwd()
@@ -74,6 +89,13 @@ if __name__ == '__main__':
 	elif len(sys.argv) > 3:
 		print "usage: %s [<base dir>] [<port>]" % sys.argv[0]
 		sys.exit(1)
+	
+	print "Reading files from: ", base
+	try:
+		fileStore = FileStore.FileStore(base)
+	except Exception as e:
+		sys.stderr.write('error reading file store: %s\n' % e.message)
+		sys.exit(1)
 
 	root = Resource()
 	root.putChild("download", DownloadFile())
@@ -81,6 +103,5 @@ if __name__ == '__main__':
 	root.putChild("upload", UploadFile())
 
 	reactor.listenTCP(port, Site(root))
-	print "Base directory: ", base
 	print "starting server on port %s..." % port
 	reactor.run()
